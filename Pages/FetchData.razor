@@ -7,18 +7,14 @@
 
 <p>This component demonstrates the Virtualize component with a Loading message.</p>
 
-@if (Forecasts.Any())
-{
-    <Virtualize ItemsProvider="LoadForecasts" Context="forecast" OverscanCount="10">
-        <ItemContent>
-            <p>@forecast.Date.ToShortDateString()</p>
-        </ItemContent>
-    </Virtualize>
-}
-else
-{
-    <p><em>Loading...</em></p>
-}   
+<Virtualize ItemsProvider="LoadForecasts" Context="forecast" OverscanCount="10">
+    <ItemContent>
+        <p>@forecast.Date.ToShortDateString()</p>
+    </ItemContent>
+    <Placeholder>
+        <p>Loading...</p>
+    </Placeholder>
+</Virtualize>
 
 
 @code {
@@ -26,7 +22,7 @@ else
 
     protected override async Task OnInitializedAsync()
     {
-        await LoadForecasts(new ItemsProviderRequest(0, 10, new CancellationToken()));
+        //await LoadForecasts(new ItemsProviderRequest(0, 10, new CancellationToken()));
     }
 
     private async ValueTask<ItemsProviderResult<WeatherForecast>> LoadForecasts(ItemsProviderRequest request)
