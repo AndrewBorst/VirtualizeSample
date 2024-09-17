@@ -1,0 +1,48 @@
+﻿@page "/fetchdata"
+@using VirtualizeSample.Data
+@using Microsoft.AspNetCore.Components.Web.Virtualization
+@inject WeatherForecastService ForecastService
+
+<h1>Weather forecast</h1>
+
+<p>This component demonstrates the Virtualize component with a Loading message.</p>
+
+@if (Forecasts.Any())
+{
+    <Virtualize ItemsProvider="LoadForecasts" Context="forecast" OverscanCount="10">
+        <ItemContent>
+            <p>@forecast.Date.ToShortDateString()</p>
+        </ItemContent>
+    </Virtualize>
+}
+else
+{
+    <p><em>Loading...</em></p>
+}   
+
+
+@code {
+    private List<WeatherForecast> Forecasts = new List<WeatherForecast>();
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadForecasts(new ItemsProviderRequest(0, 10, new CancellationToken()));
+    }
+
+    private async ValueTask<ItemsProviderResult<WeatherForecast>> LoadForecasts(ItemsProviderRequest request)
+    {
+        var random = new Random();
+
+        await Task.Delay(2000); 
+
+        Forecasts = Enumerable.Range(request.StartIndex, request.Count).Select(i => new WeatherForecast
+            {
+                Summary = "Row " + i,
+                Date = DateOnly.FromDateTime(DateTime.Now),
+                TemperatureC = random.Next(-50, 50)
+            }).ToList();
+
+        return new ItemsProviderResult<WeatherForecast>(Forecasts, 10);
+
+    }
+}
