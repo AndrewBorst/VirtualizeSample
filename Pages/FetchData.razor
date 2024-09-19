@@ -7,7 +7,7 @@
 
 <p>This component demonstrates the Virtualize component with a Loading message.</p>
 
-<Virtualize ItemsProvider="LoadForecasts" Context="forecast" OverscanCount="10">
+<Virtualize ItemsProvider="LoadForecasts" Context="forecast" OverscanCount="10" @ref="_virtualize">
     <ItemContent>
         <p>@forecast.Date.ToShortDateString()</p>
     </ItemContent>
@@ -19,17 +19,30 @@
 
 @code {
     private List<WeatherForecast> Forecasts = new List<WeatherForecast>();
+    private const int InitialPlaceholderCount = 10;
+    private Virtualize<WeatherForecast> _virtualize = null!;
+    private bool _hasProvidedInitialPlaceholders;
 
-    protected override async Task OnInitializedAsync()
-    {
-        //await LoadForecasts(new ItemsProviderRequest(0, 10, new CancellationToken()));
-    }
 
     private async ValueTask<ItemsProviderResult<WeatherForecast>> LoadForecasts(ItemsProviderRequest request)
     {
-        var random = new Random();
 
-        await Task.Delay(2000); 
+        if (!_hasProvidedInitialPlaceholders)
+        {
+            _hasProvidedInitialPlaceholders = true;
+            _ = LoadActualItemsAsync();
+            return new(items: [], totalItemCount: InitialPlaceholderCount);
+
+            async Task LoadActualItemsAsync()
+            {
+                await Task.Yield(); // Defer the call to 'RefreshDataAsync()` to avoid cancelling the current request
+                await _virtualize.RefreshDataAsync(); // Refresh the data, which will call 'LoadForecastsAsync()' again
+                StateHasChanged(); // Re-render the component
+            }
+        }
+
+        var random = new Random();
+        await Task.Delay(2000);
 
         Forecasts = Enumerable.Range(request.StartIndex, request.Count).Select(i => new WeatherForecast
             {
@@ -39,6 +52,5 @@
             }).ToList();
 
         return new ItemsProviderResult<WeatherForecast>(Forecasts, 10);
-
     }
 }
